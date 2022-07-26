@@ -8,7 +8,7 @@ d2l.use_svg_display()
 trans=transforms.ToTensor()
 mnist_train=torchvision.datasets.FashionMNIST(root='../data',train=True,transform=trans,download=True)
 mnist_test=torchvision.datasets.FashionMNIST(root='../data',train=False,transform=trans,download=True)
-
+lr=0.03
 
 def get_fashion_mnist_labels(labels):
     text_labels = ['t-shirt', 'trouser', 'pullover', 'dress', 'coat',
@@ -115,7 +115,7 @@ def train_epoch_ch3(net,train_iter,loss,updater):
             l.backward()
             metric.add(float(l)*len(y),accuracy(y_hat,y),y.size().numel())
         else:
-            l.sum()
+            l.sum().backward()
             updater(X.shape[0])
             metric.add(float(l.sum()), accuracy(y_hat, y), y.numel())
     return metric[0]/metric[2],metric[1]/metric[2]
@@ -124,10 +124,20 @@ def train_ch3(net,train_iter,test_iter,loss,num_epochs,updater):
     animator = Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[0.3, 0.9],
                         legend=['train loss', 'train acc', 'test acc'])
     for epoch in range(num_epochs):
-        pass
+        train_metrics=train_epoch_ch3(net,train_iter,loss,updater)
+        test_acc=evaluate_accuracy(net,test_iter)
+        # animator.add(epoch+1,train_metrics+(test_acc,))
+    train_loss,train_acc=train_metrics
 
-def updater():
-    pass
+
+def sgd(params,lr,batch_size):
+    with torch.no_grad():
+        for param in params:
+            param-=lr*param.grad/batch_size
+            param.grad.zero_()
+
+def updater(batch_size):
+    sgd([w,b],lr,batch_size)
 
 class Animator:  #@save
     """在动画中绘制数据"""
@@ -167,4 +177,18 @@ class Animator:  #@save
             self.axes[0].plot(x, y, fmt)
         self.config_axes()
         display.display(self.fig)
+        d2l.plt.draw()
+        d2l.plt.pause(0.001)
         display.clear_output(wait=True)
+
+train_ch3(net,train_iter,test_iter,cross_entropy,10,updater)
+def predict_(net,test_iter,n=6):
+    for X,y in test_iter:
+        break
+    true=get_fashion_mnist_labels(y)
+    pred=get_fashion_mnist_labels(net(X).argmax(axis=1))
+    titles = [true + '\n' + pred for true, pred in zip(true, pred)]
+    d2l.show_images(
+        X[0:n].reshape((n, 28, 28)), 1, n, titles=titles[0:n])
+    d2l.plt.show()
+predict_(net,test_iter)
