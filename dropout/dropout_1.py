@@ -37,9 +37,6 @@ class Net(nn.Module):
 
 
 
-dropout1, dropout2 = 0.2, 0.5
-
-
 net=Net(num_inputs, num_outputs,hidden_layer1, hidden_layer2)
 
 batch_size,num_epochs=256,10

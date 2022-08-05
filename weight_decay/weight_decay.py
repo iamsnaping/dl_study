@@ -18,16 +18,30 @@ def ini_parameters():
 def l2_penalty(w):
     return torch.sum(w.pow(2))/2
 
-def train(lambd):
-    w,b=ini_parameters()
-    num_epochs,lr=100,0.003
-    net,loss=lambda x:d2l.linreg(x,w,b),d2l.squared_loss
+def train_concise(wd):
+    net = nn.Sequential(nn.Linear(num_inputs, 1))
+    for param in net.parameters():
+        param.data.normal_()
+    loss = nn.MSELoss(reduction='none')
+    num_epochs, lr = 100, 0.003
+    # 偏置参数没有衰减
+    trainer = torch.optim.SGD([
+        {"params":net[0].weight,'weight_decay': wd},
+        {"params":net[0].bias}], lr=lr)
+    animator = d2l.Animator(xlabel='epochs', ylabel='loss', yscale='log',
+                            xlim=[5, num_epochs], legend=['train', 'test'])
     for epoch in range(num_epochs):
-        for X,y in train_iter:
-            # with torch.enable_grad():
-            l=loss(net(X),y)+l2_penalty(w)*lambd
-            l.sum().backward()
-            d2l.sgd([w,b],lr,batch_size=batch_size)
-    print('w的l2范数是',torch.norm(w).item())
-
-train(0.1)
+        for X, y in train_iter:
+            trainer.zero_grad()
+            l = loss(net(X), y)
+            l.mean().backward()
+            trainer.step()
+        if (epoch + 1) % 5 == 0:
+            animator.add(epoch + 1,
+                         (d2l.evaluate_loss(net, train_iter, loss),
+                          d2l.evaluate_loss(net, test_iter, loss)))
+    print('w的L2范数：', net[0].weight.norm().item())
+train_concise(0)
+train_concise(0.5)
+train_concise(5)
+train_concise(10)

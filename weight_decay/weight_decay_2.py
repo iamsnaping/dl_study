@@ -14,6 +14,8 @@ def train(wd):
     loss=nn.MSELoss()
     net=nn.Sequential(nn.Linear(num_inputs,1))
     num_epochs,lr=100,0.003
+    animator = d2l.Animator(xlabel='epochs', ylabel='loss', yscale='log',
+                            xlim=[5, num_epochs], legend=['train', 'test'])
     for params in net.parameters():
         params.data.normal_()
     trainer=torch.optim.SGD([{'params':net[0].weight,'weight_decay':wd},{'params':net[0].bias}],lr=lr)
@@ -23,5 +25,12 @@ def train(wd):
             l=loss(net(X),y)
             l.backward()
             trainer.step()
+        if (epoch + 1) % 5 == 0:
+            animator.add(epoch + 1, (d2l.evaluate_loss(net, train_iter, loss),
+                                     d2l.evaluate_loss(net, test_iter, loss)))
     print(net[0].weight.norm().item())
+
+train(0.5)
 train(3)
+train(5)
+train(10)

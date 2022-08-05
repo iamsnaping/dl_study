@@ -3,7 +3,6 @@ import torchvision
 from torch.utils import data
 from torchvision import transforms
 from d2l import torch as d2l
-from IPython import display
 d2l.use_svg_display()
 trans=transforms.ToTensor()
 mnist_train=torchvision.datasets.FashionMNIST(root='../data',train=True,transform=trans,download=True)
@@ -121,12 +120,12 @@ def train_epoch_ch3(net,train_iter,loss,updater):
     return metric[0]/metric[2],metric[1]/metric[2]
 
 def train_ch3(net,train_iter,test_iter,loss,num_epochs,updater):
-    animator = Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[0.3, 0.9],
+    animator = d2l.Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[0.3, 0.9],
                         legend=['train loss', 'train acc', 'test acc'])
     for epoch in range(num_epochs):
         train_metrics=train_epoch_ch3(net,train_iter,loss,updater)
         test_acc=evaluate_accuracy(net,test_iter)
-        # animator.add(epoch+1,train_metrics+(test_acc,))
+        animator.add(epoch+1,train_metrics+(test_acc,))
     train_loss,train_acc=train_metrics
 
 
@@ -139,47 +138,6 @@ def sgd(params,lr,batch_size):
 def updater(batch_size):
     sgd([w,b],lr,batch_size)
 
-class Animator:  #@save
-    """在动画中绘制数据"""
-    def __init__(self, xlabel=None, ylabel=None, legend=None, xlim=None,
-                 ylim=None, xscale='linear', yscale='linear',
-                 fmts=('-', 'm--', 'g-.', 'r:'), nrows=1, ncols=1,
-                 figsize=(3.5, 2.5)):
-        # 增量地绘制多条线
-        if legend is None:
-            legend = []
-        d2l.use_svg_display()
-        self.fig, self.axes = d2l.plt.subplots(nrows, ncols, figsize=figsize)
-        if nrows * ncols == 1:
-            self.axes = [self.axes, ]
-        # 使用lambda函数捕获参数
-        self.config_axes = lambda: d2l.set_axes(
-            self.axes[0], xlabel, ylabel, xlim, ylim, xscale, yscale, legend)
-        self.X, self.Y, self.fmts = None, None, fmts
-
-    def add(self, x, y):
-        # 向图表中添加多个数据点
-        if not hasattr(y, "__len__"):
-            y = [y]
-        n = len(y)
-        if not hasattr(x, "__len__"):
-            x = [x] * n
-        if not self.X:
-            self.X = [[] for _ in range(n)]
-        if not self.Y:
-            self.Y = [[] for _ in range(n)]
-        for i, (a, b) in enumerate(zip(x, y)):
-            if a is not None and b is not None:
-                self.X[i].append(a)
-                self.Y[i].append(b)
-        self.axes[0].cla()
-        for x, y, fmt in zip(self.X, self.Y, self.fmts):
-            self.axes[0].plot(x, y, fmt)
-        self.config_axes()
-        display.display(self.fig)
-        d2l.plt.draw()
-        d2l.plt.pause(0.001)
-        display.clear_output(wait=True)
 
 train_ch3(net,train_iter,test_iter,cross_entropy,10,updater)
 def predict_(net,test_iter,n=6):

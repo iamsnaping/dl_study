@@ -28,7 +28,7 @@ def evaluate_loss(net,data_iter,loss):
         metric.add(l.sum(),l.numel())
         return metric[0]/metric[1]
 def train(train_features,test_features,train_labels,
-          test_labels,num_epochs=400):
+          test_labels,num_epochs=500):
     loss=nn.MSELoss()
     input_shape=train_features.shape[-1]
     net=nn.Sequential(nn.Linear(input_shape,1,bias=False))
@@ -46,6 +46,11 @@ def train(train_features,test_features,train_labels,
     print('weight:', net[0].weight.data.numpy())
 
 
+# train(poly_features[:n_train, :2], poly_features[n_train:, :2],
+#       labels[:n_train], labels[n_train:])
+#
+# train(poly_features[:n_train, :4], poly_features[n_train:, :4],
+#       labels[:n_train], labels[n_train:])
 
-train(poly_features[:n_train, :4], poly_features[n_train:, :4],
+train(poly_features[:n_train, :], poly_features[n_train:, :],
       labels[:n_train], labels[n_train:])
